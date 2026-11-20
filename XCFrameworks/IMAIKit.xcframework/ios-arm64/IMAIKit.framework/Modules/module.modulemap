@@ -1,0 +1,10 @@
+framework module IMAIKit {
+  umbrella header "IMAIKit.h"
+  export *
+
+  module * { export * }
+}
+
+module IMAIKit.Swift {
+  header "IMAIKit-Swift.h"
+}

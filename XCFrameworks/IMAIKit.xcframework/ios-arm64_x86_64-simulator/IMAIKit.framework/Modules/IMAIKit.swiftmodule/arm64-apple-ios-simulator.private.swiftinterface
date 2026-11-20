@@ -1,0 +1,572 @@
+// swift-interface-format-version: 1.0
+// swift-compiler-version: Apple Swift version 6.4.2 effective-5.10 (swiftlang-6.4.2.1.9 clang-2100.4.1.1)
+// swift-module-flags: -target arm64-apple-ios15.0-simulator -enable-objc-interop -enable-library-evolution -language-mode 5 -O -enable-experimental-feature DebugDescriptionMacro -enable-bare-slash-regex -module-name IMAIKit
+// swift-module-flags-ignorable: -no-verify-emitted-module-interface -formal-cxx-interoperability-mode=off -interface-compiler-version 6.4.2
+import AVFoundation
+import Foundation
+@_exported import IMAIKit
+import QuartzCore
+import Swift
+import UIKit
+import WCDBSwift
+import _Concurrency
+import _StringProcessing
+import _SwiftConcurrencyShims
+import libopus
+public protocol AIVoiceUplinking : AnyObject {
+  var isAvailable: Swift::Bool { get }
+  var onPCMFrame: (([Swift::Int16]) -> Swift::Void)? { get set }
+  func startTalk()
+  func stopTalk()
+  func cancel()
+}
+final public class IMAIAudioFileStore {
+  final public let userID: Swift::String
+  public init(userID: Swift::String)
+  public enum Kind : Swift::String {
+    case question
+    case answer
+    public init?(rawValue: Swift::String)
+    public typealias RawValue = Swift::String
+    public var rawValue: Swift::String {
+      get
+    }
+  }
+  final public func newFileName(kind: IMAIKit::IMAIAudioFileStore.IMAIKit::Kind, messageID: Swift::String) -> Swift::String
+  final public func url(for fileName: Swift::String) -> Foundation::URL
+  final public func exists(_ fileName: Swift::String) -> Swift::Bool
+  public static let retentionInterval: Swift::Double
+  final public func isWithinRetention(_ fileName: Swift::String, now: Foundation::Date = Date()) -> Swift::Bool
+  @discardableResult
+  final public func purgeExpired(now: Foundation::Date = Date()) -> [Swift::String]
+  final public func remove(_ fileName: Swift::String)
+  final public func remove(_ fileNames: [Swift::String])
+  final public func clear()
+  final public func totalBytes() -> Swift::Int64
+  @objc deinit
+}
+final public class IMAIAudioPlayer {
+  public enum SessionMode {
+    case voiceChat
+    case playbackOnly
+    public static func == (a: IMAIKit::IMAIAudioPlayer.IMAIKit::SessionMode, b: IMAIKit::IMAIAudioPlayer.IMAIKit::SessionMode) -> Swift::Bool
+    public func hash(into hasher: inout Swift::Hasher)
+    public var hashValue: Swift::Int {
+      get
+    }
+  }
+  final public var pendingBuffers: Swift::Int
+  final public var onDrained: (() -> Swift::Void)?
+  final public var onInterrupted: (() -> Swift::Void)?
+  final public var onPlaybackStarted: (() -> Swift::Void)?
+  public init(sampleRate: Swift::Double = 24000, sessionMode: IMAIKit::IMAIAudioPlayer.IMAIKit::SessionMode = .voiceChat)
+  @objc deinit
+  final public func enqueue(_ pcm: Foundation::Data)
+  final public func finishWhenDrained()
+  final public func stop()
+}
+final public class IMAIAudioRecorder {
+  final public var onFrame: (([Swift::Int16]) -> Swift::Void)?
+  public init(sampleRate: Swift::Double = 16000, frameSamples: Swift::Int = 320)
+  final public func start()
+  final public func stop()
+  @objc deinit
+}
+public enum IMAIAudioSession {
+  public enum PlaybackActivation {
+    case exclusive
+    case mixed
+    case failed
+    public var isActive: Swift::Bool {
+      get
+    }
+    public static func == (a: IMAIKit::IMAIAudioSession.IMAIKit::PlaybackActivation, b: IMAIKit::IMAIAudioSession.IMAIKit::PlaybackActivation) -> Swift::Bool
+    public func hash(into hasher: inout Swift::Hasher)
+    public var hashValue: Swift::Int {
+      get
+    }
+  }
+  @discardableResult
+  public static func activateVoiceChat() -> Swift::Bool
+  @discardableResult
+  public static func activatePlayback() -> IMAIKit::IMAIAudioSession.IMAIKit::PlaybackActivation
+  public static func deactivate(notifyOthers: Swift::Bool = false)
+  public static var currentOutputRoute: Swift::String {
+    get
+  }
+}
+public protocol IMAIChatService : AnyObject {
+  var mode: IMAIKit::IMAIConversationMode { get set }
+  var model: IMAIKit::IMAIModel { get set }
+  func send(prompt: Swift::String, conversationID: Swift::String?, onDelta: @escaping (Swift::String) -> Swift::Void, onComplete: @escaping (Swift::Result<IMAIKit::IMAIMessage, any Swift::Error>) -> Swift::Void)
+  func cancel()
+}
+final public class IMAIStubChatService : IMAIKit::IMAIChatService {
+  final public var mode: IMAIKit::IMAIConversationMode
+  final public var model: IMAIKit::IMAIModel
+  public init(mode: IMAIKit::IMAIConversationMode = .stream, model: IMAIKit::IMAIModel = .chat)
+  final public func send(prompt: Swift::String, conversationID: Swift::String?, onDelta: @escaping (Swift::String) -> Swift::Void, onComplete: @escaping (Swift::Result<IMAIKit::IMAIMessage, any Swift::Error>) -> Swift::Void)
+  final public func cancel()
+  @objc deinit
+}
+public struct IMAIConversation : Swift::Codable, Swift::Equatable, Swift::Identifiable {
+  public let id: Swift::String
+  public var title: Swift::String
+  public var model: IMAIKit::IMAIModel
+  public var petKind: IMAIKit::IMAIPetKind?
+  public var messages: [IMAIKit::IMAIMessage]
+  public let createdAt: Foundation::Date
+  public var updatedAt: Foundation::Date
+  public init(id: Swift::String = UUID().uuidString, title: Swift::String, model: IMAIKit::IMAIModel = .chat, petKind: IMAIKit::IMAIPetKind? = nil, messages: [IMAIKit::IMAIMessage] = [], createdAt: Foundation::Date = Date(), updatedAt: Foundation::Date = Date())
+  public init(from decoder: any Swift::Decoder) throws
+  public static func == (a: IMAIKit::IMAIConversation, b: IMAIKit::IMAIConversation) -> Swift::Bool
+  public typealias ID = Swift::String
+  public func encode(to encoder: any Swift::Encoder) throws
+}
+public protocol IMAIConversationStore : AnyObject {
+  func conversations() -> [IMAIKit::IMAIConversation]
+  func conversation(id: Swift::String) -> IMAIKit::IMAIConversation?
+  @discardableResult
+  func create(title: Swift::String, model: IMAIKit::IMAIModel, petKind: IMAIKit::IMAIPetKind?) -> IMAIKit::IMAIConversation
+  func append(message: IMAIKit::IMAIMessage, to conversationID: Swift::String)
+  func removeMessage(id: Swift::String, from conversationID: Swift::String)
+  func removeMessages(ids: [Swift::String], from conversationID: Swift::String)
+  func removeMessages(ids: [Swift::String])
+  func delete(id: Swift::String)
+  func search(keyword: Swift::String) -> [IMAIKit::IMAIConversation]
+}
+extension IMAIKit::IMAIConversationStore {
+  @discardableResult
+  public func create(title: Swift::String) -> IMAIKit::IMAIConversation
+  @discardableResult
+  public func create(title: Swift::String, model: IMAIKit::IMAIModel) -> IMAIKit::IMAIConversation
+  public func removeMessages(ids: [Swift::String], from conversationID: Swift::String)
+  public func removeMessages(ids: [Swift::String])
+  public func conversations(model: IMAIKit::IMAIModel) -> [IMAIKit::IMAIConversation]
+  public func conversations(model: IMAIKit::IMAIModel, petKind: IMAIKit::IMAIPetKind?) -> [IMAIKit::IMAIConversation]
+  public func dailyConversation(model: IMAIKit::IMAIModel, petKind: IMAIKit::IMAIPetKind? = nil, fallbackTitle: @autoclosure () -> Swift::String) -> IMAIKit::IMAIConversation
+}
+public enum IMAIDailyConversationTitle {
+  public static func today() -> Swift::String
+}
+extension Foundation::NSNotification.Foundation::Name {
+  public static let imaiConversationsDidChange: Foundation::Notification.Foundation::Name
+}
+@available(*, deprecated, message: "改用 IMAIWCDBConversationStore（抗量 + 支持 SQL 查询）")
+final public class IMAIFileConversationStore : IMAIKit::IMAIConversationStore {
+  final public let userID: Swift::String
+  public init(userID: Swift::String)
+  final public func conversations() -> [IMAIKit::IMAIConversation]
+  final public func conversation(id: Swift::String) -> IMAIKit::IMAIConversation?
+  @discardableResult
+  final public func create(title: Swift::String, model: IMAIKit::IMAIModel, petKind: IMAIKit::IMAIPetKind?) -> IMAIKit::IMAIConversation
+  final public func append(message: IMAIKit::IMAIMessage, to conversationID: Swift::String)
+  final public func removeMessage(id: Swift::String, from conversationID: Swift::String)
+  final public func delete(id: Swift::String)
+  final public func search(keyword: Swift::String) -> [IMAIKit::IMAIConversation]
+  @objc deinit
+}
+final public class IMAIMemoryConversationStore : IMAIKit::IMAIConversationStore {
+  final public let userID: Swift::String
+  public init(userID: Swift::String)
+  final public func conversations() -> [IMAIKit::IMAIConversation]
+  final public func conversation(id: Swift::String) -> IMAIKit::IMAIConversation?
+  @discardableResult
+  final public func create(title: Swift::String, model: IMAIKit::IMAIModel, petKind: IMAIKit::IMAIPetKind?) -> IMAIKit::IMAIConversation
+  final public func append(message: IMAIKit::IMAIMessage, to conversationID: Swift::String)
+  final public func removeMessage(id: Swift::String, from conversationID: Swift::String)
+  final public func delete(id: Swift::String)
+  final public func search(keyword: Swift::String) -> [IMAIKit::IMAIConversation]
+  @objc deinit
+}
+public enum IMAIConversationMode : Swift::String, Swift::Codable, Swift::CaseIterable {
+  case stream
+  case once
+  public init?(rawValue: Swift::String)
+  public typealias AllCases = [IMAIKit::IMAIConversationMode]
+  public typealias RawValue = Swift::String
+  nonisolated public static var allCases: [IMAIKit::IMAIConversationMode] {
+    get
+  }
+  public var rawValue: Swift::String {
+    get
+  }
+}
+public enum IMAIModel : Swift::String, Swift::Codable, Swift::CaseIterable {
+  case chat
+  case pet
+  case translate
+  public init?(rawValue: Swift::String)
+  public typealias AllCases = [IMAIKit::IMAIModel]
+  public typealias RawValue = Swift::String
+  nonisolated public static var allCases: [IMAIKit::IMAIModel] {
+    get
+  }
+  public var rawValue: Swift::String {
+    get
+  }
+}
+public enum IMAIMessageRole : Swift::String, Swift::Codable {
+  case user
+  case assistant
+  public init?(rawValue: Swift::String)
+  public typealias RawValue = Swift::String
+  public var rawValue: Swift::String {
+    get
+  }
+}
+public enum IMAIPetKind : Swift::String, Swift::Codable, Swift::CaseIterable {
+  case dog
+  case cat
+  public init?(rawValue: Swift::String)
+  public typealias AllCases = [IMAIKit::IMAIPetKind]
+  public typealias RawValue = Swift::String
+  nonisolated public static var allCases: [IMAIKit::IMAIPetKind] {
+    get
+  }
+  public var rawValue: Swift::String {
+    get
+  }
+}
+public enum IMAIError : Swift::Error {
+  case notImplemented
+  case noUser
+  public static func == (a: IMAIKit::IMAIError, b: IMAIKit::IMAIError) -> Swift::Bool
+  public func hash(into hasher: inout Swift::Hasher)
+  public var hashValue: Swift::Int {
+    get
+  }
+}
+final public class IMAIImageFileStore {
+  final public let userID: Swift::String
+  public init(userID: Swift::String)
+  final public func save(_ data: Foundation::Data, suggestedName: Swift::String) -> Swift::String?
+  final public func url(for fileName: Swift::String) -> Foundation::URL
+  final public func resolve(_ storedValue: Swift::String) -> Swift::String
+  final public func owns(path: Swift::String) -> Swift::Bool
+  final public func remove(path: Swift::String)
+  final public func remove(paths: [Swift::String])
+  final public func clear()
+  final public func totalBytes() -> Swift::Int64
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers final public class IMAIKit {
+  public static let shared: IMAIKit::IMAIKit
+  final public var userID: Swift::String {
+    get
+  }
+  final public func configure(userID: Swift::String)
+  final public var service: any IMAIKit::IMAIChatService {
+    get
+  }
+  final public var conversationStore: any IMAIKit::IMAIConversationStore {
+    get
+  }
+  final public var preferences: any IMAIKit::IMAIPreferencesStore {
+    get
+  }
+  final public func resolveImagePath(_ path: Swift::String) -> Swift::String
+  final public var realtimeConnectInfoProvider: IMAIKit::IMAIRealtimeConnectInfoProvider?
+  final public func makeRealtimeSession(scene: IMAIKit::IMAIRealtimeScene, inputModes: [IMAIKit::IMAIRealtimeMode] = [.text, .audio], outputModes: [IMAIKit::IMAIRealtimeMode] = [.text, .audio], context: [Swift::String : Swift::String] = [:], silenceTimeout: Foundation::TimeInterval = IMAIRealtimeSession.defaultSilenceTimeout, maxRecordDuration: Foundation::TimeInterval = IMAIRealtimeSession.defaultMaxRecordDuration) -> IMAIKit::IMAIRealtimeSession
+  final public func shutdownRealtimeSession()
+  @objc deinit
+}
+public struct IMAIMessage : Swift::Codable, Swift::Equatable, Swift::Identifiable {
+  public let id: Swift::String
+  public let role: IMAIKit::IMAIMessageRole
+  public var text: Swift::String
+  public var imageURL: Swift::String?
+  public var audioDuration: Swift::Double?
+  public var audioPath: Swift::String?
+  public var ttsComplete: Swift::Bool
+  public var emotion: Swift::String?
+  public let createdAt: Foundation::Date
+  public init(id: Swift::String = UUID().uuidString, role: IMAIKit::IMAIMessageRole, text: Swift::String, imageURL: Swift::String? = nil, audioDuration: Swift::Double? = nil, audioPath: Swift::String? = nil, ttsComplete: Swift::Bool = false, emotion: Swift::String? = nil, createdAt: Foundation::Date = Date())
+  public static func == (a: IMAIKit::IMAIMessage, b: IMAIKit::IMAIMessage) -> Swift::Bool
+  public typealias ID = Swift::String
+  public func encode(to encoder: any Swift::Encoder) throws
+  public init(from decoder: any Swift::Decoder) throws
+}
+final public class IMAIOpusDecoder {
+  public init(sampleRate: Swift::Int32 = 16000, channels: Swift::Int32 = 1) throws
+  @objc deinit
+  final public func decode(_ opus: Foundation::Data) throws -> [Swift::Int16]
+}
+public enum IMAIOpusError : Swift::Error {
+  case createFailed(Swift::Int32)
+  case encodeFailed(Swift::Int32)
+  case decodeFailed(Swift::Int32)
+}
+final public class IMAIOpusEncoder {
+  public init(sampleRate: Swift::Int32 = 16000, channels: Swift::Int32 = 1, frameSize: Swift::Int32 = 320) throws
+  @objc deinit
+  final public func encode(_ pcm: [Swift::Int16]) throws -> Foundation::Data
+}
+public enum IMAIPCMDeclick {
+  public static func apply(_ pcm: Foundation::Data, sampleRate: Swift::Double, fadeMilliseconds: Swift::Double = 6) -> Foundation::Data
+}
+public protocol IMAIPreferencesStore : AnyObject {
+  var conversationMode: IMAIKit::IMAIConversationMode { get set }
+  var model: IMAIKit::IMAIModel { get set }
+  var petKind: IMAIKit::IMAIPetKind { get set }
+}
+extension Foundation::NSNotification.Foundation::Name {
+  public static let imaiPreferencesDidChange: Foundation::Notification.Foundation::Name
+}
+final public class IMAIUserDefaultsPreferencesStore : IMAIKit::IMAIPreferencesStore {
+  final public let userID: Swift::String
+  public init(userID: Swift::String, defaults: Foundation::UserDefaults = .standard)
+  final public var conversationMode: IMAIKit::IMAIConversationMode {
+    get
+    set
+  }
+  final public var model: IMAIKit::IMAIModel {
+    get
+    set
+  }
+  final public var petKind: IMAIKit::IMAIPetKind {
+    get
+    set
+  }
+  @objc deinit
+}
+public struct IMAIRealtimeConnectInfo {
+  public var url: Foundation::URL
+  public var headers: [Swift::String : Swift::String]
+  public init(url: Foundation::URL, headers: [Swift::String : Swift::String] = [:])
+}
+public typealias IMAIRealtimeConnectInfoProvider = () -> IMAIKit::IMAIRealtimeConnectInfo?
+public enum IMAIRealtimeScene : Swift::String, Swift::Codable, Swift::Sendable {
+  case chat, meeting, translate
+  case vision
+  public init?(rawValue: Swift::String)
+  public typealias RawValue = Swift::String
+  public var rawValue: Swift::String {
+    get
+  }
+}
+public enum IMAIRealtimeMode : Swift::String, Swift::Codable, Swift::Sendable {
+  case text, audio
+  case image
+  public init?(rawValue: Swift::String)
+  public typealias RawValue = Swift::String
+  public var rawValue: Swift::String {
+    get
+  }
+}
+public enum IMAIRealtimeStatusPhase : Swift::String, Swift::Codable, Swift::Sendable {
+  case providerConnecting
+  case providerReady
+  case asrCompleted
+  case providerIdle
+  case providerDisconnected
+  case userSpeechEnded
+  case waitingResult
+  case completed
+  case cancelled
+  case unknown
+  public init?(rawValue: Swift::String)
+  public typealias RawValue = Swift::String
+  public var rawValue: Swift::String {
+    get
+  }
+}
+extension IMAIKit::IMAIRealtimeStatusPhase {
+  public var meansSpeechEnded: Swift::Bool {
+    get
+  }
+}
+public enum IMAIRealtimeCancelReason : Swift::String, Swift::Codable, Swift::Sendable {
+  case userCancel
+  case pageExit
+  public init?(rawValue: Swift::String)
+  public typealias RawValue = Swift::String
+  public var rawValue: Swift::String {
+    get
+  }
+}
+public struct IMAIRealtimeCapabilities : Swift::Codable, Swift::Equatable, Swift::Sendable {
+  public var textIn: Swift::Bool
+  public var audioIn: Swift::Bool
+  public var textOut: Swift::Bool
+  public var audioOut: Swift::Bool
+  public var imageIn: Swift::Bool
+  public init(textIn: Swift::Bool = false, audioIn: Swift::Bool = false, textOut: Swift::Bool = false, audioOut: Swift::Bool = false, imageIn: Swift::Bool = false)
+  public static func == (a: IMAIKit::IMAIRealtimeCapabilities, b: IMAIKit::IMAIRealtimeCapabilities) -> Swift::Bool
+  public func encode(to encoder: any Swift::Encoder) throws
+  public init(from decoder: any Swift::Decoder) throws
+}
+public enum IMAIClientMessage {
+  case sessionStart(sessionId: Swift::String, scene: IMAIKit::IMAIRealtimeScene, inputModes: [IMAIKit::IMAIRealtimeMode], outputModes: [IMAIKit::IMAIRealtimeMode], context: [Swift::String : Swift::String])
+  case inputText(sessionId: Swift::String, turnId: Swift::String, text: Swift::String)
+  case inputImageReference(sessionId: Swift::String, turnId: Swift::String, assetId: Swift::String, prompt: Swift::String?)
+  case inputAudioStart(sessionId: Swift::String, turnId: Swift::String, codec: Swift::String, sampleRate: Swift::Int, channels: Swift::Int)
+  case inputAudioEnd(sessionId: Swift::String, turnId: Swift::String)
+  case inputCancel(sessionId: Swift::String, turnId: Swift::String, reason: IMAIKit::IMAIRealtimeCancelReason)
+  case sessionStop(sessionId: Swift::String)
+}
+public enum IMAIRealtimeEvent {
+  case sessionReady(sessionId: Swift::String, capabilities: IMAIKit::IMAIRealtimeCapabilities)
+  case status(turnId: Swift::String?, phase: IMAIKit::IMAIRealtimeStatusPhase, message: Swift::String?)
+  case asrPartial(turnId: Swift::String, text: Swift::String)
+  case asrFinal(turnId: Swift::String, text: Swift::String)
+  case responseTextDelta(turnId: Swift::String, seq: Swift::Int, text: Swift::String)
+  case responseTextFinal(turnId: Swift::String, text: Swift::String)
+  case responseAudioMeta(turnId: Swift::String, seq: Swift::Int?, codec: Swift::String?, sampleRate: Swift::Int?, channels: Swift::Int?)
+  case responseAudioEnd(turnId: Swift::String)
+  case error(turnId: Swift::String?, code: Swift::String, message: Swift::String?, retryable: Swift::Bool)
+  case audioBinary(pcm: Foundation::Data)
+  case unknown(type: Swift::String)
+}
+final public class IMAIRealtimeSession {
+  public static let defaultSilenceTimeout: Swift::Double
+  public static let defaultMaxRecordDuration: Swift::Double
+  final public var sessionState: IMAIKit::IMAISessionState {
+    get
+  }
+  final public var turnState: IMAIKit::IMAITurnState {
+    get
+  }
+  public init(scene: IMAIKit::IMAIRealtimeScene, inputModes: [IMAIKit::IMAIRealtimeMode] = [.audio], outputModes: [IMAIKit::IMAIRealtimeMode] = [.text, .audio], context: [Swift::String : Swift::String] = [:], silenceTimeout: Foundation::TimeInterval = IMAIRealtimeSession.defaultSilenceTimeout, maxRecordDuration: Foundation::TimeInterval = IMAIRealtimeSession.defaultMaxRecordDuration, connectGate: ((@escaping () -> Swift::Void) -> Swift::Void)? = nil, connectInfoProvider: @escaping IMAIKit::IMAIRealtimeConnectInfoProvider)
+  @objc deinit
+  @discardableResult
+  final public func subscribe(_ handler: @escaping (IMAIKit::IMAIRealtimeUpdate) -> Swift::Void) -> IMAIKit::IMAIRealtimeToken
+  final public func connect()
+  final public func stop(completion: (() -> Swift::Void)? = nil)
+  @discardableResult
+  final public func sendText(_ text: Swift::String) -> Swift::String
+  @discardableResult
+  final public func sendImageReference(assetId: Swift::String, prompt: Swift::String?) -> Swift::String
+  @discardableResult
+  final public func startAudioTurn(codec: Swift::String = "opus", sampleRate: Swift::Int = 16000, channels: Swift::Int = 1) -> Swift::String
+  final public func sendAudioFrame(_ opus: Foundation::Data)
+  final public func endAudioTurn(turnId: Swift::String)
+  final public func cancel(turnId: Swift::String, reason: IMAIKit::IMAIRealtimeCancelReason = .userCancel)
+}
+@_hasMissingDesignatedInitializers final public class IMAIRealtimeToken {
+  final public func cancel()
+  @objc deinit
+}
+public enum IMAISessionState : Swift::Equatable, Swift::Sendable {
+  case disconnected
+  case connecting
+  case ready
+  case error(Swift::String)
+  case closing
+  case closed
+  public static func == (a: IMAIKit::IMAISessionState, b: IMAIKit::IMAISessionState) -> Swift::Bool
+}
+public enum IMAITurnState : Swift::Equatable, Swift::Sendable {
+  case idle
+  case recording
+  case finishingTalk
+  case waitingReply
+  case streamingText
+  case streamingAudio
+  case completed
+  public static func == (a: IMAIKit::IMAITurnState, b: IMAIKit::IMAITurnState) -> Swift::Bool
+  public func hash(into hasher: inout Swift::Hasher)
+  public var hashValue: Swift::Int {
+    get
+  }
+}
+public enum IMAIRealtimeUpdate {
+  case event(IMAIKit::IMAIRealtimeEvent)
+  case sessionState(IMAIKit::IMAISessionState)
+  case turnState(turnId: Swift::String?, state: IMAIKit::IMAITurnState)
+  case silenceTimeout(turnId: Swift::String?)
+  case maxRecordTimeout(turnId: Swift::String?)
+}
+final public class IMAIVoiceUplink : IMAIKit::AIVoiceUplinking {
+  public init(session: IMAIKit::IMAIRealtimeSession)
+  final public var isAvailable: Swift::Bool {
+    get
+  }
+  final public var onPCMFrame: (([Swift::Int16]) -> Swift::Void)?
+  final public func startTalk()
+  final public func stopTalk()
+  final public func cancel()
+  @objc deinit
+}
+final public class IMAIWCDBConversationStore : IMAIKit::IMAIConversationStore {
+  final public let userID: Swift::String
+  final public let audioStore: IMAIKit::IMAIAudioFileStore
+  final public let imageStore: IMAIKit::IMAIImageFileStore
+  public init(userID: Swift::String)
+  final public func conversations() -> [IMAIKit::IMAIConversation]
+  final public func conversation(id: Swift::String) -> IMAIKit::IMAIConversation?
+  final public func search(keyword: Swift::String) -> [IMAIKit::IMAIConversation]
+  @discardableResult
+  final public func create(title: Swift::String, model: IMAIKit::IMAIModel, petKind: IMAIKit::IMAIPetKind?) -> IMAIKit::IMAIConversation
+  final public func append(message: IMAIKit::IMAIMessage, to conversationID: Swift::String)
+  final public func removeMessage(id: Swift::String, from conversationID: Swift::String)
+  final public func removeMessages(ids: [Swift::String], from conversationID: Swift::String)
+  final public func removeMessages(ids: [Swift::String])
+  final public func delete(id: Swift::String)
+  @objc deinit
+}
+public enum IMAIWavWriterError : Swift::Error {
+  case createFailed(Foundation::URL)
+  case alreadyFinished
+}
+final public class IMAIWavWriter {
+  final public let url: Foundation::URL
+  public init(url: Foundation::URL, sampleRate: Swift::Int, channels: Swift::Int = 1) throws
+  final public func append(_ pcm: Foundation::Data)
+  final public func append(_ samples: [Swift::Int16])
+  @discardableResult
+  final public func finish() throws -> Foundation::URL
+  final public func cancel()
+  final public var hasAudio: Swift::Bool {
+    get
+  }
+  final public var duration: Swift::Double {
+    get
+  }
+  @objc deinit
+}
+public enum IMAIRealtimeTransportError : Swift::Error {
+  case notConnected
+  case noConnectInfo
+  public static func == (a: IMAIKit::IMAIRealtimeTransportError, b: IMAIKit::IMAIRealtimeTransportError) -> Swift::Bool
+  public func hash(into hasher: inout Swift::Hasher)
+  public var hashValue: Swift::Int {
+    get
+  }
+}
+extension IMAIKit::IMAIAudioFileStore.IMAIKit::Kind : Swift::Equatable {}
+extension IMAIKit::IMAIAudioFileStore.IMAIKit::Kind : Swift::Hashable {}
+extension IMAIKit::IMAIAudioFileStore.IMAIKit::Kind : Swift::RawRepresentable {}
+extension IMAIKit::IMAIAudioPlayer.IMAIKit::SessionMode : Swift::Equatable {}
+extension IMAIKit::IMAIAudioPlayer.IMAIKit::SessionMode : Swift::Hashable {}
+extension IMAIKit::IMAIAudioSession.IMAIKit::PlaybackActivation : Swift::Equatable {}
+extension IMAIKit::IMAIAudioSession.IMAIKit::PlaybackActivation : Swift::Hashable {}
+extension IMAIKit::IMAIConversationMode : Swift::Equatable {}
+extension IMAIKit::IMAIConversationMode : Swift::Hashable {}
+extension IMAIKit::IMAIConversationMode : Swift::RawRepresentable {}
+extension IMAIKit::IMAIModel : Swift::Equatable {}
+extension IMAIKit::IMAIModel : Swift::Hashable {}
+extension IMAIKit::IMAIModel : Swift::RawRepresentable {}
+extension IMAIKit::IMAIMessageRole : Swift::Equatable {}
+extension IMAIKit::IMAIMessageRole : Swift::Hashable {}
+extension IMAIKit::IMAIMessageRole : Swift::RawRepresentable {}
+extension IMAIKit::IMAIPetKind : Swift::Equatable {}
+extension IMAIKit::IMAIPetKind : Swift::Hashable {}
+extension IMAIKit::IMAIPetKind : Swift::RawRepresentable {}
+extension IMAIKit::IMAIError : Swift::Equatable {}
+extension IMAIKit::IMAIError : Swift::Hashable {}
+extension IMAIKit::IMAIRealtimeScene : Swift::Equatable {}
+extension IMAIKit::IMAIRealtimeScene : Swift::Hashable {}
+extension IMAIKit::IMAIRealtimeScene : Swift::RawRepresentable {}
+extension IMAIKit::IMAIRealtimeMode : Swift::Equatable {}
+extension IMAIKit::IMAIRealtimeMode : Swift::Hashable {}
+extension IMAIKit::IMAIRealtimeMode : Swift::RawRepresentable {}
+extension IMAIKit::IMAIRealtimeStatusPhase : Swift::Equatable {}
+extension IMAIKit::IMAIRealtimeStatusPhase : Swift::Hashable {}
+extension IMAIKit::IMAIRealtimeStatusPhase : Swift::RawRepresentable {}
+extension IMAIKit::IMAIRealtimeCancelReason : Swift::Equatable {}
+extension IMAIKit::IMAIRealtimeCancelReason : Swift::Hashable {}
+extension IMAIKit::IMAIRealtimeCancelReason : Swift::RawRepresentable {}
+extension IMAIKit::IMAITurnState : Swift::Hashable {}
+extension IMAIKit::IMAIRealtimeTransportError : Swift::Equatable {}
+extension IMAIKit::IMAIRealtimeTransportError : Swift::Hashable {}
