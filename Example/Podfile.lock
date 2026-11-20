@@ -1,0 +1,33 @@
+PODS:
+  - IMAIKit (0.1.2):
+    - WCDB.swift (= 2.1.16)
+  - WCDB.swift (2.1.16):
+    - WCDBOptimizedSQLCipher (= 1.4.8)
+  - WCDBOptimizedSQLCipher (1.4.8)
+
+DEPENDENCIES:
+  - IMAIKit (from `https://github.com/INMO-X/IMAIKit.git`, tag `0.1.2`)
+
+SPEC REPOS:
+  trunk:
+    - WCDB.swift
+    - WCDBOptimizedSQLCipher
+
+EXTERNAL SOURCES:
+  IMAIKit:
+    :git: https://github.com/INMO-X/IMAIKit.git
+    :tag: 0.1.2
+
+CHECKOUT OPTIONS:
+  IMAIKit:
+    :git: https://github.com/INMO-X/IMAIKit.git
+    :tag: 0.1.2
+
+SPEC CHECKSUMS:
+  IMAIKit: b7fd8851b7b3876fb4c6729e5edbb9fbed43fff1
+  WCDB.swift: d9c65b12e4ca9c97387c75c2393a50d9649d99e0
+  WCDBOptimizedSQLCipher: 871994f7f620302fdf87a2729c099a1efa2223da
+
+PODFILE CHECKSUM: 233ccfc33a86b66054e2c8275fafc0b81666c4db
+
+COCOAPODS: 1.16.2
